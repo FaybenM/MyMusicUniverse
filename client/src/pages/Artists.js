@@ -5,7 +5,7 @@ function Artists() {
   const [artists, setArtists] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5000/api/artists")
+    axios.get("http://localhost:5050/api/artists")
       .then(response => setArtists(response.data))
       .catch(error => console.error("Error fetching artists:", error));
   }, []);
