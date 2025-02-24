@@ -3,37 +3,27 @@ import axios from "axios";
 
 function Artists() {
   const [artists, setArtists] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
 
   useEffect(() => {
-    // Axios GET request to your backend API
-    axios
-      .get("http://localhost:5051/api/artists")
-      .then((response) => {
-        setArtists(response.data);  // Store data in state
-        setLoading(false);  // Set loading to false after data is fetched
+    axios.get("http://localhost:5051/api/artists") // This is your backend URL
+      .then(response => {
+        console.log(response.data); // Check what is being received
+        setArtists(response.data); // Set the response data to your state
       })
-      .catch((err) => {
-        setError("Error fetching data");
-        setLoading(false);  // Set loading to false in case of error
-        console.error(err);  // Log the error for debugging
+      .catch(error => {
+        console.error("Error fetching artists:", error); // Handle errors
       });
   }, []);
 
   return (
     <div>
       <h1>Artists</h1>
-      {loading ? (
-        <p>Loading...</p>  // Display loading message until data is fetched
-      ) : error ? (
-        <p>{error}</p>  // Display error message if any
-      ) : artists.length === 0 ? (
+      {artists.length === 0 ? (
         <p>No artists found.</p>
       ) : (
         <ul>
           {artists.map((artist) => (
-            <li key={artist.id}>{artist.name}</li>  // Display each artist's name
+            <li key={artist.id}>{artist.name}</li>
           ))}
         </ul>
       )}
