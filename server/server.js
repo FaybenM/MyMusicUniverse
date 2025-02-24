@@ -9,5 +9,5 @@ app.get("/", (req, res) => {
     res.send("My Music Universe API is running...");
 });
 
-const PORT = process.env.PORT || 5050;
+const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
