@@ -6,7 +6,7 @@ function Artists() {
   const [artists, setArtists] = useState([]);
 
   useEffect(() => {
-    axios.get("http://localhost:5051/api/artists") // This is your backend URL
+    axios.get("http://localhost:5051/api/artists") // This is backend URL
       .then(response => {
         console.log(response.data); // Check what is being received
         setArtists(response.data); // Set the response data to your state
@@ -25,7 +25,7 @@ function Artists() {
         <ul>
           {artists.map((artist) => (
             <li key={artist.id}>
-              <Link to={`/artists/${artist.id}`}>{artist.name}</Link> {/* Add Link to Artist Profile */}
+              <Link to={`/artists/${artist.id}`}>{artist.name}</Link> {/* Link to Artist Detail */}
             </li>
           ))}
         </ul>
