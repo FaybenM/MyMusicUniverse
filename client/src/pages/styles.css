@@ -81,3 +81,16 @@
     margin: 5px 0;
   }
   
+
+  /* color pallette */
+body {
+  background-color: #ffb4b4;
+}
+
+h1, h2, h3 {
+  color: #950606; /* Bold text color */
+}
+
+p, li {
+  color: #3f1717; /* Regular text color */
+}
