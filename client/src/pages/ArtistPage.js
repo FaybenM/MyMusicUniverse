@@ -1,5 +1,5 @@
 import React from "react";
-
+import './styles.css';
 const ArtistPage = () => {
   return (
     <div className="artist-page">
