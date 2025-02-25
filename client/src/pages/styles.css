@@ -1,0 +1,50 @@
+
+.artist-page {
+    padding: 20px;
+  }
+  
+  .artist-header {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .artist-photo {
+    border-radius: 50%;
+    width: 150px;
+    height: 150px;
+    object-fit: cover;
+  }
+  
+  .artist-bio {
+    margin-bottom: 20px;
+  }
+  
+  .top-albums {
+    margin-bottom: 20px;
+  }
+  
+  .albums-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 15px;
+  }
+  
+  .album {
+    text-align: center;
+  }
+  
+  .album-cover {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  .top-songs ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .top-songs li {
+    margin: 5px 0;
+  }
+  
