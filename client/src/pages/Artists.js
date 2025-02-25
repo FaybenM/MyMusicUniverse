@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
+import { Link } from "react-router-dom"; // Import Link
 
 function Artists() {
   const [artists, setArtists] = useState([]);
@@ -23,7 +24,9 @@ function Artists() {
       ) : (
         <ul>
           {artists.map((artist) => (
-            <li key={artist.id}>{artist.name}</li>
+            <li key={artist.id}>
+              <Link to={`/artists/${artist.id}`}>{artist.name}</Link> {/* Add Link to Artist Profile */}
+            </li>
           ))}
         </ul>
       )}
