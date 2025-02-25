@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom"; // For accessing URL parameters
+import './styles.css';
 
 function ArtistDetail() {
   const [artist, setArtist] = useState(null);
