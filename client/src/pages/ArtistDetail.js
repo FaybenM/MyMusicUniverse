@@ -16,11 +16,13 @@ function ArtistDetail() {
   if (!artist) return <div>Loading...</div>;
 
   return (
-    <div>
-      <h1>{artist.name}</h1>
-      <img src={artist.image} alt={artist.name} /> {/* Adjust this based on your data */}
-      <p>{artist.bio}</p> {/* Display bio */}
-      {/* Display other artist details, such as albums or songs, as needed */}
+    <div className="artist-detail-container">
+      <h1 className="artist-name">{artist.name}</h1>
+      <div className="artist-image-container">
+        <img src={artist.image} alt={artist.name} className="artist-image" />
+      </div>
+      <p className="artist-bio">{artist.bio}</p>
+      {/* You can add more artist details here */}
     </div>
   );
 }
