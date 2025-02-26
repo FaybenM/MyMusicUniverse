@@ -13,11 +13,13 @@ import logo from "./images/MyMusicUniverseLogo.png";
 function App() {
   return (
     <Router>
-      <header>
-        <nav className="navbar">
-          <div className="logo">
-            <img src={logo} alt="My Music Universe Logo" />
-          </div>
+      <header className="navbar">
+        {/* Logo without background */}
+        <div className="logo">
+          <img src={logo} alt="My Music Universe Logo" />
+        </div>
+          {/* Nav Links with background */}
+        <div className="nav-container">
           <ul className="nav-links">
           <li><Link to="/">Home</Link></li>
           <li><Link to="/artists">Artists</Link></li>
@@ -25,7 +27,7 @@ function App() {
           <li><Link to="/concerts">Concerts</Link></li>
           <li><Link to="/admin">Admin</Link></li>
           </ul>
-        </nav>
+        </div>
      </header>
 
       <Routes>
