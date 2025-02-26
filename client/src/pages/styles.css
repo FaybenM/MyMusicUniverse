@@ -94,3 +94,48 @@ h1, h2, h3 {
 p, li {
   color: #3f1717; /* Regular text color */
 }
+
+/* Navigation Bar */
+.navbar {
+  display: flex;
+  justify-content: space-between; /* Space between logo and nav links */
+  align-items: center;
+  padding: 10px 20px;
+}
+
+/* Logo */
+.logo img {
+  height: 40px; /* Adjust as needed */
+  width: auto;
+}
+
+/* Navigation Links with Background */
+.nav-container {
+  background-color: #3F1717; /* Background color for nav links only */
+  padding: 10px 20px;
+  border-radius: 8px; /* Optional: adds rounded corners */
+}
+
+.nav-links {
+  list-style: none;
+  display: flex;
+  gap: 20px; /* Space between links */
+  margin: 0;
+  padding: 0;
+}
+
+.nav-links li {
+  display: inline;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #FFB4B4; /* Default font color */
+  font-weight: bold;
+  font-size: 16px;
+  transition: color 0.3s ease-in-out;
+}
+
+.nav-links a:hover {
+  color: #FF8A8A; /* Hover color */
+}
