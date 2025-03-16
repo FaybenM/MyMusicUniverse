@@ -1,78 +1,52 @@
-// utils/spotifyAPI.js
-const fetch = require("node-fetch");
-require("dotenv").config();
+const express = require("express");
+const mongoose = require("mongoose");
+const cors = require("cors");
+const dotenv = require("dotenv");
+const { getArtistFromSpotify, getTopTracks, getTopAlbums } = require("./utils/spotifyAPI");
+const Artist = require("./models/Artist"); // Ensure this matches your artist model path
 
-const CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
-const CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+dotenv.config();
+const app = express();
+app.use(express.json());
+app.use(cors());
 
-// Function to get an access token from Spotify
-async function getSpotifyAccessToken() {
-  const response = await fetch("https://accounts.spotify.com/api/token", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: `grant_type=client_credentials&client_id=${CLIENT_ID}&client_secret=${CLIENT_SECRET}`,
-  });
+mongoose.connect(process.env.MONGO_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-  const data = await response.json();
-  return data.access_token; // Return access token
-}
+// Fetch and store artist in MongoDB
+app.post("/api/artists", async (req, res) => {
+  const { name } = req.body;
 
-// Function to fetch artist details from Spotify
-async function getArtistFromSpotify(artistName) {
-  const token = await getSpotifyAccessToken();
-  const searchUrl = `https://api.spotify.com/v1/search?q=${encodeURIComponent(
-    artistName
-  )}&type=artist&limit=1`;
+  try {
+    let artistData = await getArtistFromSpotify(name);
+    if (!artistData) return res.status(404).json({ error: "Artist not found" });
 
-  const response = await fetch(searchUrl, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
+    // Check if artist already exists
+    let existingArtist = await Artist.findOne({ spotifyId: artistData.spotifyId });
+    if (!existingArtist) {
+      const topTracks = await getTopTracks(artistData.spotifyId);
+      const topAlbums = await getTopAlbums(artistData.spotifyId);
 
-  const data = await response.json();
-  if (data.artists.items.length === 0) return null; // No artist found
+      existingArtist = await Artist.create({
+        spotifyId: artistData.spotifyId,
+        name: artistData.name,
+        genres: artistData.genres,
+        imageUrl: artistData.imageUrl,
+        followers: artistData.followers,
+        topSongs: topTracks,
+        topAlbums: topAlbums,
+      });
+    }
 
-  const artist = data.artists.items[0];
-  return {
-    spotifyId: artist.id,
-    name: artist.name,
-    genres: artist.genres,
-    imageUrl: artist.images.length > 0 ? artist.images[0].url : "",
-    followers: artist.followers.total,
-  };
-}
+    res.json(existingArtist);
+  } catch (error) {
+    console.error("Error fetching artist:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
 
-// Function to fetch top 3 songs
-async function getTopTracks(spotifyId) {
-  const token = await getSpotifyAccessToken();
-  const url = `https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?market=US`;
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  const data = await response.json();
-  return data.tracks.slice(0, 3).map(track => ({
-    name: track.name,
-    spotifyId: track.id,
-  }));
-}
-
-// Function to fetch top 3 albums
-async function getTopAlbums(spotifyId) {
-  const token = await getSpotifyAccessToken();
-  const url = `https://api.spotify.com/v1/artists/${spotifyId}/albums?include_groups=album&limit=3`;
-
-  const response = await fetch(url, {
-    headers: { Authorization: `Bearer ${token}` },
-  });
-
-  const data = await response.json();
-  return data.items.map(album => ({
-    name: album.name,
-    spotifyId: album.id,
-  }));
-}
-
-module.exports = { getArtistFromSpotify, getTopTracks, getTopAlbums };
+// Start the server
+const PORT = process.env.PORT || 5051;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
