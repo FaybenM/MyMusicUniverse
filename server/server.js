@@ -12,8 +12,16 @@ mongoose
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
-  .then(() => console.log("Connected to MongoDB"))
-  .catch((err) => console.error("Error connecting to MongoDB:", err));
+  .then(() => {
+    console.log("✅ Connected to MongoDB");
+    
+    // Check if artists exist in the database
+    Artist.countDocuments()
+      .then(count => console.log(`📊 Artists in database: ${count}`))
+      .catch(err => console.error("❌ Error counting artists:", err));
+  })
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
+
 
 const app = express();
 app.use(cors());
