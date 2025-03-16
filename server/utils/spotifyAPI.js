@@ -1,52 +1,59 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const dotenv = require("dotenv");
-const { getArtistFromSpotify, getTopTracks, getTopAlbums } = require("./utils/spotifyAPI");
-const Artist = require("./models/Artist"); // Ensure this matches your artist model path
+const axios = require("axios");
 
-dotenv.config();
-const app = express();
-app.use(express.json());
-app.use(cors());
-
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
-
-// Fetch and store artist in MongoDB
-app.post("/api/artists", async (req, res) => {
-  const { name } = req.body;
+const getArtistFromSpotify = async (artistName) => {
+  // Log the artist name to verify it's being passed correctly
+  console.log("Searching for artist:", artistName);
 
   try {
-    let artistData = await getArtistFromSpotify(name);
-    if (!artistData) return res.status(404).json({ error: "Artist not found" });
+    // Make the API request to Spotify
+    const response = await fetch(`https://api.spotify.com/v1/search?q=${artistName}&type=artist`, {
+      headers: {
+        Authorization: `Bearer ${process.env.SPOTIFY_API_KEY}`, // Ensure your token is correct
+      },
+    });
 
-    // Check if artist already exists
-    let existingArtist = await Artist.findOne({ spotifyId: artistData.spotifyId });
-    if (!existingArtist) {
-      const topTracks = await getTopTracks(artistData.spotifyId);
-      const topAlbums = await getTopAlbums(artistData.spotifyId);
+    // Convert the response to JSON
+    const data = await response.json();
 
-      existingArtist = await Artist.create({
-        spotifyId: artistData.spotifyId,
-        name: artistData.name,
-        genres: artistData.genres,
-        imageUrl: artistData.imageUrl,
-        followers: artistData.followers,
-        topSongs: topTracks,
-        topAlbums: topAlbums,
-      });
+    // Log the response from Spotify
+    console.log("Spotify API response:", data);
+
+    // Check if the data contains artists
+    if (data.artists && data.artists.items.length > 0) {
+      return data.artists.items[0]; // Return the first artist from the response
+    } else {
+      console.log("Artist not found on Spotify.");
+      return null;
     }
-
-    res.json(existingArtist);
   } catch (error) {
-    console.error("Error fetching artist:", error);
-    res.status(500).json({ error: "Server error" });
+    console.error("Error fetching from Spotify:", error);
+    return null;
   }
-});
+};
 
-// Start the server
-const PORT = process.env.PORT || 5051;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+const getTopTracks = async (spotifyId) => {
+  const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?country=US`;
+
+  try {
+    const response = await axios.get(spotifyApiUrl);
+    return response.data.tracks;
+  } catch (error) {
+    console.error("Error fetching top tracks:", error);
+    return [];
+  }
+};
+
+const getTopAlbums = async (spotifyId) => {
+  const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/albums`;
+
+  try {
+    const response = await axios.get(spotifyApiUrl);
+    return response.data.items;
+  } catch (error) {
+    console.error("Error fetching top albums:", error);
+    return [];
+  }
+};
+
+module.exports = { getArtistFromSpotify, getTopTracks, getTopAlbums };

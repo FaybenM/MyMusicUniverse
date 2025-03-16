@@ -1,20 +1,14 @@
-// server.js
 require("dotenv").config(); // Load environment variables
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const { getArtistFromSpotify, getTopTracks, getTopAlbums } = require("./utils/spotifyAPI"); // Import Spotify API helper
+const { getArtistFromSpotify, getTopTracks, getTopAlbums } = require("./utils/spotifyApi"); // Fix path to relative path
 const Artist = require("./models/Artist"); // Import MongoDB model
 
 // Connect to MongoDB
-mongoose
-  .connect("mongodb://127.0.0.1:27017/mymusicuniverse", {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+mongoose.connect("mongodb://127.0.0.1:27017/mymusicuniverse")
   .then(() => {
     console.log("✅ Connected to MongoDB");
-    
     // Check if artists exist in the database
     Artist.countDocuments()
       .then(count => console.log(`📊 Artists in database: ${count}`))
