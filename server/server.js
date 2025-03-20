@@ -85,6 +85,27 @@ app.get("/api/artists/:id", async (req, res) => {
   }
 });
 
+// ✅ New Route: Fetch jazz artists from Spotify
+app.get("/api/spotify/jazz-artists", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const jazzArtists = await getArtistsByGenre("jazz", limit);
+
+    if (!jazzArtists.length) {
+      return res.status(404).json({ error: "No jazz artists found" });
+    }
+
+    res.json({
+      message: `Found ${jazzArtists.length} jazz artists`,
+      artists: jazzArtists
+    });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Something went wrong" });
+  }
+});
+
+
 // Start Server
 const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
