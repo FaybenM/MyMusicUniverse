@@ -105,6 +105,15 @@ app.get("/api/spotify/jazz-artists", async (req, res) => {
   }
 });
 
+app.get("/api/spotify/genre/jazz", async (req, res) => {
+  try {
+    const artists = await getArtistsByGenre('jazz');
+    res.json(artists); // Send the artists' data as a response
+  } catch (error) {
+    res.status(500).json({ error: "Error fetching jazz artists" });
+  }
+});
+
 
 // Start Server
 const PORT = process.env.PORT || 5051;

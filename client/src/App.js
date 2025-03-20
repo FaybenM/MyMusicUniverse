@@ -8,6 +8,8 @@ import Albums from "./pages/Albums";
 import Concerts from "./pages/Concerts";
 import Admin from "./pages/Admin";
 import logo from "./images/MyMusicUniverseLogo.png";
+import JazzArtists from './components/JazzArtists';
+
 
 function App() {
   const [artistName, setArtistName] = useState("");
@@ -34,6 +36,7 @@ function App() {
             <li><Link to="/albums">Albums</Link></li>
             <li><Link to="/concerts">Concerts</Link></li>
             <li><Link to="/admin">Admin</Link></li>
+            <Link to="/jazz-artists">Jazz Artists</Link>
           </ul>
         </div>
       </header>
@@ -57,6 +60,7 @@ function App() {
         <Route path="/albums" element={<Albums />} />
         <Route path="/concerts" element={<Concerts />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/jazz-artists" element={<JazzArtists />} />
       </Routes>
     </Router>
   );
