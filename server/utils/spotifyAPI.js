@@ -32,6 +32,27 @@ const getSpotifyToken = async () => {
   }
 };
 
+// Retry function
+const fetchWithRetry = async (url, retries = 5, delay = 1000) => {
+  try {
+    const token = await getSpotifyToken();
+    const response = await axios.get(url, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    return response.data;
+  } catch (error) {
+    if (error.response && error.response.status === 429 && retries > 0) {
+      const retryAfter = error.response.headers['retry-after'] || delay / 1000;  // Default to delay if no header is present
+      console.log(`Rate limit exceeded. Retrying in ${retryAfter} seconds...`);
+      await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));  // Wait before retrying
+      return fetchWithRetry(url, retries - 1, delay);  // Retry
+    } else {
+      console.error('Error in fetch:', error.message);
+      throw error;  // Propagate error if not 429 or retries exhausted
+    }
+  }
+};
+
 // Function to search for an artist on Spotify
 const getArtistFromSpotify = async (artistName) => {
   console.log("Searching for artist:", artistName);
@@ -63,37 +84,16 @@ const getArtistFromSpotify = async (artistName) => {
 // Function to get the top tracks of an artist
 const getTopTracks = async (spotifyId) => {
   const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?country=US`;
+  return await fetchWithRetry(spotifyApiUrl);  // Use retry function here
 
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(spotifyApiUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data.tracks;
-  } catch (error) {
-    console.error("Error fetching top tracks:", error);
-    return [];
-  }
 };
 
 // Function to get the top albums of an artist
 const getTopAlbums = async (spotifyId) => {
   const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/albums`;
 
-  try {
-    const token = await getSpotifyToken();
-    const response = await axios.get(spotifyApiUrl, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data.items;
-  } catch (error) {
-    console.error("Error fetching top albums:", error);
-    return [];
-  }
+  return await fetchWithRetry(spotifyApiUrl);  // Use retry function here
+  
 };
 
 // Function to get artists by genre
