@@ -2,31 +2,32 @@ require("dotenv").config(); // Load environment variables
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const { getArtistFromSpotify, getTopTracks, getTopAlbums } = require("./utils/spotifyApi"); // Fix path to relative path
+
+const { getArtistFromSpotify, getTopTracks, getTopAlbums, getArtistsByGenre } = require("./utils/spotifyApi"); // Fix path to relative path
 const Artist = require("./models/Artist"); // Import MongoDB model
 
-// Connect to MongoDB
-mongoose.connect("mongodb://127.0.0.1:27017/mymusicuniverse")
+// ✅ 1️⃣ Connect to MongoDB
+mongoose
+  .connect("mongodb://127.0.0.1:27017/mymusicuniverse")
   .then(() => {
     console.log("✅ Connected to MongoDB");
-    // Check if artists exist in the database
     Artist.countDocuments()
-      .then(count => console.log(`📊 Artists in database: ${count}`))
-      .catch(err => console.error("❌ Error counting artists:", err));
+      .then((count) => console.log(`📊 Artists in database: ${count}`))
+      .catch((err) => console.error("❌ Error counting artists:", err));
   })
   .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-
+// ✅ 2️⃣ Initialize Express App & Middleware
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Root Route
+// ✅ 3️⃣ Root Route
 app.get("/", (req, res) => {
   res.send("My Music Universe API is running...");
 });
 
-// Get all artists from MongoDB
+// ✅ 4️⃣ MongoDB Artist Routes
 app.get("/api/artists", async (req, res) => {
   try {
     const artists = await Artist.find();
@@ -36,7 +37,21 @@ app.get("/api/artists", async (req, res) => {
   }
 });
 
-// ✅ Updated Route: Fetch artist from Spotify and save top songs & albums
+app.get("/api/artists/:id", async (req, res) => {
+  try {
+    const artist = await Artist.findOne({ spotifyId: req.params.id });
+    if (!artist) return res.status(404).json({ error: "Artist not found" });
+
+    res.json(artist);
+  } catch (error) {
+    console.error("Error fetching artist:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ✅ 5️⃣ Spotify API Routes
+
+// Fetch artist from Spotify, save top songs & albums
 app.get("/api/spotify/artist/:name", async (req, res) => {
   const { name } = req.params;
 
@@ -46,14 +61,11 @@ app.get("/api/spotify/artist/:name", async (req, res) => {
       return res.status(404).json({ error: "Artist not found" });
     }
 
-    // Check if artist already exists in MongoDB
     let existingArtist = await Artist.findOne({ spotifyId: artistData.spotifyId });
     if (!existingArtist) {
-      // Fetch top songs & albums from Spotify
       const topTracks = await getTopTracks(artistData.spotifyId);
       const topAlbums = await getTopAlbums(artistData.spotifyId);
 
-      // Save artist data to MongoDB
       existingArtist = await Artist.create({
         spotifyId: artistData.spotifyId,
         name: artistData.name,
@@ -72,20 +84,7 @@ app.get("/api/spotify/artist/:name", async (req, res) => {
   }
 });
 
-// ✅ New Route: Fetch a single artist from MongoDB
-app.get("/api/artists/:id", async (req, res) => {
-  try {
-    const artist = await Artist.findOne({ spotifyId: req.params.id });
-    if (!artist) return res.status(404).json({ error: "Artist not found" });
-
-    res.json(artist);
-  } catch (error) {
-    console.error("Error fetching artist:", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
-});
-
-// ✅ New Route: Fetch jazz artists from Spotify
+// Fetch jazz artists from Spotify
 app.get("/api/spotify/jazz-artists", async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
@@ -95,26 +94,50 @@ app.get("/api/spotify/jazz-artists", async (req, res) => {
       return res.status(404).json({ error: "No jazz artists found" });
     }
 
-    res.json({
-      message: `Found ${jazzArtists.length} jazz artists`,
-      artists: jazzArtists
-    });
+    res.json({ message: `Found ${jazzArtists.length} jazz artists`, artists: jazzArtists });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Something went wrong" });
   }
 });
 
+// Alternative jazz genre route
 app.get("/api/spotify/genre/jazz", async (req, res) => {
   try {
-    const artists = await getArtistsByGenre('jazz');
-    res.json(artists); // Send the artists' data as a response
+    const artists = await getArtistsByGenre("jazz");
+    res.json(artists);
   } catch (error) {
     res.status(500).json({ error: "Error fetching jazz artists" });
   }
 });
 
+// Fetch and store jazz artists in MongoDB
+app.get("/api/spotify/store-jazz-artists", async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 50;
+    const jazzArtists = await getArtistsByGenre("jazz", limit);
 
-// Start Server
+    if (!jazzArtists.length) {
+      return res.status(404).json({ error: "No jazz artists found" });
+    }
+
+    const bulkOps = jazzArtists.map((artist) => ({
+      updateOne: {
+        filter: { spotifyId: artist.spotifyId },
+        update: { $setOnInsert: artist },
+        upsert: true,
+      },
+    }));
+
+    await Artist.bulkWrite(bulkOps);
+
+    res.json({ message: `Stored ${jazzArtists.length} jazz artists in MongoDB`, artists: jazzArtists });
+  } catch (error) {
+    console.error("Error storing jazz artists:", error);
+    res.status(500).json({ error: "Failed to store jazz artists" });
+  }
+});
+
+// ✅ 6️⃣ Start Server
 const PORT = process.env.PORT || 5051;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
