@@ -121,6 +121,22 @@ app.get("/api/spotify/store-jazz-artists", async (req, res) => {
       return res.status(404).json({ error: "No jazz artists found" });
     }
 
+
+    // Fetch top songs & albums for each artist
+    const enrichedArtists = await Promise.all(
+      jazzArtists.map(async (artist) => {
+        const topSongs = await getTopTracks(artist.spotifyId);
+        const topAlbums = await getTopAlbums(artist.spotifyId);
+
+        return {
+          ...artist,
+          topSongs,
+          topAlbums,
+        };
+      })
+    );
+
+
     const bulkOps = jazzArtists.map((artist) => ({
       updateOne: {
         filter: { spotifyId: artist.spotifyId },
@@ -131,7 +147,7 @@ app.get("/api/spotify/store-jazz-artists", async (req, res) => {
 
     await Artist.bulkWrite(bulkOps);
 
-    res.json({ message: `Stored ${jazzArtists.length} jazz artists in MongoDB`, artists: jazzArtists });
+    res.json({ message: `Stored ${enrichedArtists.length} jazz artists with top songs & albums in MongoDB`, artists: enrichedArtists });
   } catch (error) {
     console.error("Error storing jazz artists:", error);
     res.status(500).json({ error: "Failed to store jazz artists" });
