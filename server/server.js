@@ -137,11 +137,21 @@ app.get("/api/spotify/store-jazz-artists", async (req, res) => {
     );
 
 
-    const bulkOps = jazzArtists.map((artist) => ({
+    const bulkOps = enrichedArtists.map((artist) => ({
       updateOne: {
         filter: { spotifyId: artist.spotifyId },
-        update: { $setOnInsert: artist },
-        upsert: true,
+        update: {
+          $setOnInsert: {
+            spotifyId: artist.spotifyId,
+            name: artist.name,
+            genres: artist.genres,
+            imageUrl: artist.imageUrl,
+            followers: artist.followers,
+            topSongs: artist.topSongs,  // Include topSongs here
+            topAlbums: artist.topAlbums, // Include topAlbums here
+          },
+        },
+        upsert: true, // Insert if not found
       },
     }));
 
