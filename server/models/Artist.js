@@ -1,13 +1,25 @@
 const mongoose = require("mongoose");
 
 const artistSchema = new mongoose.Schema({
-  spotifyId: String,
-  name: String,
+  spotifyId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
   genres: [String],
   imageUrl: String,
   followers: Number,
-  topSongs: [{ name: String, spotifyId: String }],
-  topAlbums: [{ name: String, spotifyId: String }],
+  topSongs: [
+    {
+      name: String,
+      popularity: Number,
+      album: String,
+    },
+  ],
+  topAlbums: [
+    {
+      name: String,
+      releaseDate: String,
+      albumType: String,
+    },
+  ],
 });
 
 module.exports = mongoose.model("Artist", artistSchema);
