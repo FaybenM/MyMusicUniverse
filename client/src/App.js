@@ -36,7 +36,6 @@ function App() {
             <li><Link to="/albums">Albums</Link></li>
             <li><Link to="/concerts">Concerts</Link></li>
             <li><Link to="/admin">Admin</Link></li>
-            <Link to="/jazz-artists">Jazz Artists</Link>
           </ul>
         </div>
       </header>
