@@ -84,17 +84,30 @@ const getArtistFromSpotify = async (artistName) => {
 // Function to get the top tracks of an artist
 const getTopTracks = async (spotifyId) => {
   const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/top-tracks?country=US`;
-  return await fetchWithRetry(spotifyApiUrl);  // Use retry function here
+  const data = await fetchWithRetry(spotifyApiUrl);
 
+  if (!data.tracks) return []; // If no tracks are found, return an empty array
+
+  return data.tracks.map(track => ({
+    id: track.id,
+    name: track.name,  // ✅ Include track name
+  }));
 };
+
 
 // Function to get the top albums of an artist
 const getTopAlbums = async (spotifyId) => {
   const spotifyApiUrl = `https://api.spotify.com/v1/artists/${spotifyId}/albums`;
+  const data = await fetchWithRetry(spotifyApiUrl);
 
-  return await fetchWithRetry(spotifyApiUrl);  // Use retry function here
-  
+  if (!data.items) return []; // If no albums are found, return an empty array
+
+  return data.items.map(album => ({
+    id: album.id,
+    name: album.name,  // ✅ Include album name
+  }));
 };
+
 
 // Function to get artists by genre
 const getArtistsByGenre = async (genre, limit = 20) => {
