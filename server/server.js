@@ -141,19 +141,19 @@ app.get("/api/spotify/store-jazz-artists", async (req, res) => {
       updateOne: {
         filter: { spotifyId: artist.spotifyId },
         update: {
-          $setOnInsert: {
-            spotifyId: artist.spotifyId,
+          $set: {
             name: artist.name,
             genres: artist.genres,
             imageUrl: artist.imageUrl,
             followers: artist.followers,
-            topSongs: artist.topSongs,  // Include topSongs here
-            topAlbums: artist.topAlbums, // Include topAlbums here
+            topSongs: artist.topSongs,  // ✅ Ensure topSongs are updated
+            topAlbums: artist.topAlbums, // ✅ Ensure topAlbums are updated
           },
         },
-        upsert: true, // Insert if not found
+        upsert: true, // Insert if not found, update if exists
       },
     }));
+    
 
     await Artist.bulkWrite(bulkOps);
 
