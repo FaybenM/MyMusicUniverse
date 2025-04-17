@@ -63,27 +63,44 @@ app.get("/api/spotify/artist/:name", async (req, res) => {
 
     let existingArtist = await Artist.findOne({ spotifyId: artistData.spotifyId });
     if (!existingArtist) {
+      // Get additional artist data
       const topTracks = await getTopTracks(artistData.spotifyId);
       const topAlbums = await getTopAlbums(artistData.spotifyId);
-
-      existingArtist = await Artist.create({
-        spotifyId: artistData.spotifyId,
-        name: artistData.name,
-        genres: artistData.genres,
-        imageUrl: artistData.imageUrl,
-        followers: artistData.followers,
-        topSongs: topTracks,
-        topAlbums: topAlbums,
-      });
+      
+      // Create complete artist object
+      const completeArtistData = {
+        ...artistData,
+        topTracks,
+        topAlbums,
+        lastUpdated: new Date()
+      };
+      
+      // Save to database
+      const newArtist = new Artist(completeArtistData);
+      await newArtist.save();
+      
+      return res.json(completeArtistData);
     }
-
-    res.json(existingArtist);
+    
+    // If artist exists but data is older than 24 hours, refresh it
+    if (existingArtist.lastUpdated && 
+        (new Date() - new Date(existingArtist.lastUpdated)) > 24 * 60 * 60 * 1000) {
+      const topTracks = await getTopTracks(artistData.spotifyId);
+      const topAlbums = await getTopAlbums(artistData.spotifyId);
+      
+      existingArtist.topTracks = topTracks;
+      existingArtist.topAlbums = topAlbums;
+      existingArtist.lastUpdated = new Date();
+      
+      await existingArtist.save();
+    }
+    
+    return res.json(existingArtist);
   } catch (error) {
-    console.error("Error fetching artist from Spotify:", error);
-    res.status(500).json({ error: "Error fetching artist data" });
+    console.error("Error fetching artist:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 });
-
 // Fetch jazz artists from Spotify
 app.get("/api/spotify/jazz-artists", async (req, res) => {
   try {
