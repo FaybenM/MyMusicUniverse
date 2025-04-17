@@ -1,0 +1,137 @@
+/* General Container for the Search Page */
+.search-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #ffb4b4; /* Set the background color */
+    border-radius: 10px; /* Optional: Add rounded corners to the container */
+  }
+  
+  /* Heading and Description */
+  .search-container h2 {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #950606; /* Set the heading color */
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  
+  .search-container p {
+    font-size: 1rem;
+    text-align: center;
+    color: #3f1717; /* Set the text color */
+    margin-bottom: 30px;
+  }
+  
+  /* Search Form */
+  .search-form {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 30px;
+  }
+  
+  .search-input {
+    padding: 10px;
+    font-size: 1rem;
+    border: 2px solid #950606;
+    border-radius: 5px;
+    outline: none;
+    flex: 1;
+  }
+  
+  .search-input:focus {
+    border-color: #FF8A8A;
+  }
+  
+  .search-button {
+    padding: 10px 20px;
+    background-color: #950606;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .search-button:disabled {
+    background-color: #d6d6d6;
+    cursor: not-allowed;
+  }
+  
+  .search-button:hover {
+    background-color: #FF8A8A;
+  }
+  
+  /* Popular Searches Section */
+  .popular-searches {
+    margin-top: 30px;
+  }
+  
+  .popular-searches h3 {
+    font-size: 1.5rem;
+    color: #950606;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .popular-artists {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+  
+  .artist-chip {
+    padding: 8px 15px;
+    background-color: #3f1717;
+    color: #FFB4B4;
+    border: none;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
+  
+  .artist-chip:hover {
+    background-color: #FF8A8A;
+  }
+  
+  /* Error Message */
+  .error-message {
+    color: #d9534f;
+    font-size: 1.2rem;
+    text-align: center;
+    margin-top: 20px;
+  }
+  
+  /* Spinner for Loading State */
+  .spinner {
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top: 3px solid #fff;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+  }
+  
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+  
+  /* Accessibility: visually hide the label for screen readers */
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    border: 0;
+    clip: rect(0, 0, 0, 0);
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  

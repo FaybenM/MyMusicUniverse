@@ -30,6 +30,12 @@ const ArtistProfile = () => {
     fetchArtist();
   }, [name]);
 
+  const formatDuration = (ms) => {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = ((ms % 60000) / 1000).toFixed(0);
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+  };
+
   if (loading) return <div className="loading">Loading artist profile...</div>;
   if (error) return <div className="error">Error: {error}</div>;
   if (!artist) return <div className="not-found">Artist not found</div>;
@@ -37,13 +43,11 @@ const ArtistProfile = () => {
   return (
     <div className="artist-profile">
       <div className="artist-header">
-        {artist.images && artist.images.length > 0 && (
-          <img 
-            src={artist.images[0].url} 
-            alt={artist.name} 
-            className="artist-image"
-          />
-        )}
+        <img 
+          src={artist.images?.[0]?.url || '/default-artist.png'} 
+          alt={artist.name} 
+          className="artist-image"
+        />
         <div className="artist-info">
           <h1>{artist.name}</h1>
           <p className="followers">{artist.followers?.toLocaleString()} followers</p>
@@ -52,6 +56,9 @@ const ArtistProfile = () => {
               <span key={index} className="genre-tag">{genre}</span>
             ))}
           </div>
+          <p className="last-updated">
+            Last updated: {new Date(artist.lastUpdated).toLocaleDateString()}
+          </p>
         </div>
       </div>
 
@@ -62,16 +69,15 @@ const ArtistProfile = () => {
             {artist.topTracks?.map((track, index) => (
               <li key={track.id} className="track-item">
                 <span className="track-number">{index + 1}</span>
-                {track.album?.images && track.album.images.length > 0 && (
-                  <img 
-                    src={track.album.images[track.album.images.length - 1].url} 
-                    alt={track.name} 
-                    className="track-image"
-                  />
-                )}
+                <img 
+                  src={track.album?.images?.[track.album.images.length - 1]?.url || '/default-track.png'} 
+                  alt={track.name} 
+                  className="track-image"
+                />
                 <div className="track-info">
                   <span className="track-name">{track.name}</span>
                   <span className="track-album">{track.album?.name}</span>
+                  <span className="track-duration">{formatDuration(track.duration_ms)}</span>
                 </div>
                 {track.preview_url && (
                   <audio controls className="track-preview">
@@ -86,15 +92,13 @@ const ArtistProfile = () => {
         <div className="top-albums">
           <h2>Albums</h2>
           <div className="albums-grid">
-            {artist.topAlbums?.map(album => (
+            {artist.topAlbums?.sort((a, b) => new Date(b.release_date) - new Date(a.release_date))?.map(album => (
               <div key={album.id} className="album-card">
-                {album.images && album.images.length > 0 && (
-                  <img 
-                    src={album.images[0].url} 
-                    alt={album.name} 
-                    className="album-image"
-                  />
-                )}
+                <img 
+                  src={album.images?.[0]?.url || '/default-album.png'} 
+                  alt={album.name} 
+                  className="album-image"
+                />
                 <div className="album-info">
                   <h3>{album.name}</h3>
                   <p>{album.release_date?.split('-')[0]} • {album.total_tracks} tracks</p>
