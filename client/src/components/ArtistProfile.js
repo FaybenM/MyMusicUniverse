@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import './ArtistProfile.css';
+import './styles.css';
 
 const ArtistProfile = () => {
   const [artist, setArtist] = useState(null);
@@ -13,11 +13,7 @@ const ArtistProfile = () => {
       try {
         setLoading(true);
         const response = await fetch(`http://localhost:5000/api/spotify/artist/${name}`);
-        
-        if (!response.ok) {
-          throw new Error('Artist not found');
-        }
-        
+        if (!response.ok) throw new Error('Artist not found');
         const data = await response.json();
         setArtist(data);
         setLoading(false);
@@ -26,11 +22,10 @@ const ArtistProfile = () => {
         setLoading(false);
       }
     };
-
     fetchArtist();
   }, [name]);
 
-  const formatDuration = (ms) => {
+  const formatDuration = ms => {
     const minutes = Math.floor(ms / 60000);
     const seconds = ((ms % 60000) / 1000).toFixed(0);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
@@ -63,6 +58,7 @@ const ArtistProfile = () => {
       </div>
 
       <div className="artist-content">
+        {/* Top Tracks */}
         <div className="top-tracks">
           <h2>Popular Tracks</h2>
           <ul className="tracks-list">
@@ -89,22 +85,24 @@ const ArtistProfile = () => {
           </ul>
         </div>
 
+        {/* Top Albums */}
         <div className="top-albums">
           <h2>Albums</h2>
           <div className="albums-grid">
-            {artist.topAlbums?.sort((a, b) => new Date(b.release_date) - new Date(a.release_date))?.map(album => (
-              <div key={album.id} className="album-card">
-                <img 
-                  src={album.images?.[0]?.url || '/default-album.png'} 
-                  alt={album.name} 
-                  className="album-image"
-                />
-                <div className="album-info">
-                  <h3>{album.name}</h3>
-                  <p>{album.release_date?.split('-')[0]} • {album.total_tracks} tracks</p>
+            {artist.topAlbums
+              ?.sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
+              .map(album => (
+                <div key={album.id} className="album-card">
+                  <img 
+                    src={album.images?.[0]?.url || '/default-album.png'} 
+                    alt={album.name} 
+                  />
+                  <div className="album-info">
+                    <h3>{album.name}</h3>
+                    <p>{album.release_date?.split('-')[0]} • {album.total_tracks} tracks</p>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
           </div>
         </div>
       </div>

@@ -1,0 +1,27 @@
+{
+    "version": 1,
+    "projects": {
+      "My Music Universe": {
+        "projectType": "application",
+        "root": "src",
+        "sourceRoot": "src/app",
+        "architect": {
+          "build": {
+            "builder": "@angular-devkit/build-angular:browser",
+            "options": {
+              "outputPath": "dist/my-app",
+              "index": "src/index.html",
+              "main": "src/main.ts",
+              "polyfills": "src/polyfills.ts",
+              "tsConfig": "tsconfig.app.json",
+              "aot": true
+            }
+          }
+        }
+      }
+    },
+    "cli": {
+      "analytics": false
+    }
+  }
+  
