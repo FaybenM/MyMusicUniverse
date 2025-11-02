@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import ArtistDetail from "./ArtistDetail"; // Import the ArtistDetail component
-import './styles.css';
+import '../styles.css';
 
 const ArtistPage = () => {
   const { id } = useParams(); // Get the artist ID from the URL

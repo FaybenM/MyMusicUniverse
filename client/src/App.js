@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 import Home from "./pages/Home";
 import Artists from "./pages/Artists";
-import ArtistPage from "./pages/ArtistPage";
-import ArtistDetail from "./pages/ArtistDetail";
 import Albums from "./pages/Albums";
 import Concerts from "./pages/Concerts";
 import Admin from "./pages/Admin";
@@ -18,7 +16,7 @@ function App() {
 
   const handleSearch = () => {
     if (artistName) {
-      window.location.href = `/artists/${artistName}`;
+      window.location.href = `/artist/${artistName}`;
     }
   };
 
@@ -43,7 +41,7 @@ function App() {
         <div className="search-container">
           <input
             type="text"
-            placeholder="Search for an artist"
+            placeholder="Search for artist/album"
             value={artistName}
             onChange={(e) => setArtistName(e.target.value)}
           />
@@ -54,13 +52,11 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/artists" element={<Artists />} />
-            <Route path="/artists/:id" element={<ArtistPage />} />
-            <Route path="/artists/:id/detail" element={<ArtistDetail />} />
+            <Route path="/artist/:name" element={<ArtistProfile />} />
             <Route path="/albums" element={<Albums />} />
             <Route path="/concerts" element={<Concerts />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/jazz-artists" element={<JazzArtists />} />
-            <Route path="/artist/:name" element={<ArtistProfile />} />
             <Route path="/search" element={<SearchPage />} />
           </Routes>
         </main>

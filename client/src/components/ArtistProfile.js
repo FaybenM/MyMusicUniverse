@@ -1,24 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import './styles.css';
+import { useParams, Link } from 'react-router-dom';
+import '../styles.css';
 
 const ArtistProfile = () => {
+  const { name } = useParams();
   const [artist, setArtist] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { name } = useParams();
 
   useEffect(() => {
     const fetchArtist = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`http://localhost:5000/api/spotify/artist/${name}`);
+        const response = await fetch(`http://localhost:5051/api/spotify/artist/${name}`);
         if (!response.ok) throw new Error('Artist not found');
         const data = await response.json();
         setArtist(data);
-        setLoading(false);
       } catch (err) {
         setError(err.message);
+      } finally {
         setLoading(false);
       }
     };
@@ -37,9 +37,11 @@ const ArtistProfile = () => {
 
   return (
     <div className="artist-profile">
+      <Link to="/artists" className="back-button">← Back to Artists</Link>
+
       <div className="artist-header">
         <img 
-          src={artist.images?.[0]?.url || '/default-artist.png'} 
+          src={artist.imageUrl || '/default-artist.png'} 
           alt={artist.name} 
           className="artist-image"
         />
@@ -52,7 +54,7 @@ const ArtistProfile = () => {
             ))}
           </div>
           <p className="last-updated">
-            Last updated: {new Date(artist.lastUpdated).toLocaleDateString()}
+            Last updated: {artist.lastUpdated ? new Date(artist.lastUpdated).toLocaleDateString() : 'N/A'}
           </p>
         </div>
       </div>
@@ -61,49 +63,53 @@ const ArtistProfile = () => {
         {/* Top Tracks */}
         <div className="top-tracks">
           <h2>Popular Tracks</h2>
-          <ul className="tracks-list">
-            {artist.topTracks?.map((track, index) => (
-              <li key={track.id} className="track-item">
-                <span className="track-number">{index + 1}</span>
-                <img 
-                  src={track.album?.images?.[track.album.images.length - 1]?.url || '/default-track.png'} 
-                  alt={track.name} 
-                  className="track-image"
-                />
-                <div className="track-info">
-                  <span className="track-name">{track.name}</span>
-                  <span className="track-album">{track.album?.name}</span>
-                  <span className="track-duration">{formatDuration(track.duration_ms)}</span>
-                </div>
-                {track.preview_url && (
-                  <audio controls className="track-preview">
-                    <source src={track.preview_url} type="audio/mpeg" />
-                  </audio>
-                )}
-              </li>
-            ))}
-          </ul>
+          {artist.topTracks?.length > 0 ? (
+            <ul className="tracks-list">
+              {artist.topTracks.map((track, index) => (
+                <li key={track.id} className="track-item">
+                  <span className="track-number">{index + 1}</span>
+                  <img 
+                    src={track.album?.imageUrl || '/default-track.png'} 
+                    alt={track.name} 
+                    className="track-image"
+                  />
+                  <div className="track-info">
+                    <span className="track-name">{track.name}</span>
+                    <span className="track-album">{track.album?.name}</span>
+                    <span className="track-duration">{formatDuration(track.duration_ms)}</span>
+                  </div>
+                  {track.preview_url && (
+                    <audio controls className="track-preview">
+                      <source src={track.preview_url} type="audio/mpeg" />
+                    </audio>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : <p>No top tracks available.</p>}
         </div>
 
         {/* Top Albums */}
         <div className="top-albums">
           <h2>Albums</h2>
-          <div className="albums-grid">
-            {artist.topAlbums
-              ?.sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
-              .map(album => (
-                <div key={album.id} className="album-card">
-                  <img 
-                    src={album.images?.[0]?.url || '/default-album.png'} 
-                    alt={album.name} 
-                  />
-                  <div className="album-info">
-                    <h3>{album.name}</h3>
-                    <p>{album.release_date?.split('-')[0]} • {album.total_tracks} tracks</p>
+          {artist.topAlbums?.length > 0 ? (
+            <div className="albums-grid">
+              {artist.topAlbums
+                .sort((a, b) => new Date(b.release_date) - new Date(a.release_date))
+                .map(album => (
+                  <div key={album.id} className="album-card">
+                    <img 
+                      src={album.imageUrl || '/default-album.png'} 
+                      alt={album.name} 
+                    />
+                    <div className="album-info">
+                      <h3>{album.name}</h3>
+                      <p>{album.release_date?.split('-')[0]} • {album.total_tracks} tracks</p>
+                    </div>
                   </div>
-                </div>
-              ))}
-          </div>
+                ))}
+            </div>
+          ) : <p>No albums available.</p>}
         </div>
       </div>
     </div>

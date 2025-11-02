@@ -3,16 +3,21 @@ const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
 
-const { getArtistFromSpotify, getTopTracks, getTopAlbums, getArtistsByGenre } = require("./utils/spotifyApi");
+const { 
+  getArtistFromSpotify, 
+  getTopTracks, 
+  getTopAlbums, 
+  getArtistsByGenre 
+} = require("./utils/spotifyApi");
 const Artist = require("./models/Artist");
+const Album = require("./models/Album"); // Album model in MongoDB
 
 // Connect to MongoDB
 mongoose
   .connect("mongodb://127.0.0.1:27017/mymusicuniverse")
   .then(() => console.log("✅ Connected to MongoDB"))
-  .catch(err => console.error("❌ MongoDB connection error:", err));
+  .catch((err) => console.error("❌ MongoDB connection error:", err));
 
-// Initialize Express
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -22,16 +27,28 @@ app.get("/", (req, res) => {
   res.send("My Music Universe API is running...");
 });
 
-// Artist Routes
+// ---------------- Artist Routes ----------------
+
+// Get all artists with topTracks & topAlbums (top 3 each)
 app.get("/api/artists", async (req, res) => {
   try {
-    const artists = await Artist.find();
+    const artists = await Artist.find({}, {
+      name: 1,
+      spotifyId: 1,
+      imageUrl: 1,
+      genres: 1,
+      followers: 1,
+      topTracks: { $slice: 3 }, // top 3 tracks
+      topAlbums: { $slice: 3 }  // top 3 albums
+    });
     res.json(artists);
   } catch (error) {
+    console.error("Error fetching artists:", error);
     res.status(500).json({ error: "Error fetching artists" });
   }
 });
 
+// Get artist by Spotify ID
 app.get("/api/artists/:id", async (req, res) => {
   try {
     const artist = await Artist.findOne({ spotifyId: req.params.id });
@@ -42,125 +59,69 @@ app.get("/api/artists/:id", async (req, res) => {
   }
 });
 
-// Spotify API: Fetch artist by name
-app.get("/api/spotify/artist/:name", async (req, res) => {
-  const { name } = req.params;
-  try {
-    let artistData = await getArtistFromSpotify(name);
-    if (!artistData) return res.status(404).json({ error: "Artist not found" });
-
-    let existingArtist = await Artist.findOne({ spotifyId: artistData.spotifyId });
-
-    if (!existingArtist) {
-      const topTracks = await getTopTracks(artistData.spotifyId);
-      const topAlbums = await getTopAlbums(artistData.spotifyId);
-
-      const completeArtistData = {
-        ...artistData,
-        topTracks,
-        topAlbums,
-        lastUpdated: new Date()
-      };
-
-      const newArtist = new Artist(completeArtistData);
-      await newArtist.save();
-      return res.json(completeArtistData);
-    }
-
-    // Refresh if older than 24h
-    if (existingArtist.lastUpdated && (new Date() - new Date(existingArtist.lastUpdated)) > 24*60*60*1000) {
-      const topTracks = await getTopTracks(artistData.spotifyId);
-      const topAlbums = await getTopAlbums(artistData.spotifyId);
-
-      existingArtist.topTracks = topTracks;
-      existingArtist.topAlbums = topAlbums;
-      existingArtist.lastUpdated = new Date();
-      await existingArtist.save();
-    }
-
-    res.json(existingArtist);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-});
-
-// Jazz Artists Routes
+// Fetch jazz-related artists (any genre containing "jazz")
 app.get("/api/spotify/genre/jazz", async (req, res) => {
   try {
-    const artists = await getArtistsByGenre("jazz");
-    res.json(artists);
-  } catch (error) {
-    res.status(500).json({ error: "Error fetching jazz artists" });
-  }
-});
+    const jazzArtists = await Artist.find({ genres: { $regex: /jazz/i } });
+    if (jazzArtists.length > 0) {
+      return res.json(jazzArtists);
+    }
 
-// Fetch & store jazz artists in MongoDB
-app.get("/api/spotify/store-jazz-artists", async (req, res) => {
-  try {
-    const limit = parseInt(req.query.limit) || 50;
-    const jazzArtists = await getArtistsByGenre("jazz", limit);
-
+    // If not in DB, fetch from Spotify
+    const fetchedArtists = await getArtistsByGenre("jazz", 20);
     const enrichedArtists = await Promise.all(
-      jazzArtists.map(async artist => {
-        const topSongs = await getTopTracks(artist.spotifyId);
+      fetchedArtists.map(async (artist) => {
+        const topTracks = await getTopTracks(artist.spotifyId);
         const topAlbums = await getTopAlbums(artist.spotifyId);
-        return { ...artist, topSongs, topAlbums };
+        return {
+          ...artist,
+          topTracks,
+          topAlbums,
+        };
       })
     );
 
-    const bulkOps = enrichedArtists.map(artist => ({
+    const bulkOps = enrichedArtists.map((artist) => ({
       updateOne: {
         filter: { spotifyId: artist.spotifyId },
-        update: {
-          $set: {
-            name: artist.name,
-            genres: artist.genres,
-            imageUrl: artist.imageUrl,
-            followers: artist.followers,
-            topSongs: artist.topSongs,
-            topAlbums: artist.topAlbums
-          }
-        },
-        upsert: true
-      }
+        update: { $set: artist },
+        upsert: true,
+      },
     }));
 
     await Artist.bulkWrite(bulkOps);
-
-    res.json({ message: `Stored ${enrichedArtists.length} jazz artists with top songs & albums`, artists: enrichedArtists });
+    res.json(enrichedArtists);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Failed to store jazz artists" });
+    console.error("Error fetching jazz artists:", error);
+    res.status(500).json({ error: "Failed to fetch jazz artists" });
   }
 });
 
-// ✅ New Albums Endpoint
+// ---------------- Album Routes ----------------
+
+// Get featured albums (limit optional)
 app.get("/api/albums", async (req, res) => {
+  const limit = parseInt(req.query.limit) || 6;
   try {
-    const limit = parseInt(req.query.limit) || 6;
-    const artists = await Artist.find({ topAlbums: { $exists: true, $not: {$size:0} } });
-    const allAlbums = artists.flatMap(artist =>
-      artist.topAlbums.map(album => ({
-        id: album.id,
-        name: album.name,
-        artistName: artist.name,
-        imageUrl: album.images?.[0]?.url || '/default-album.png',
-        release_date: album.release_date,
-        total_tracks: album.total_tracks
-      }))
-    );
-
-    const shuffled = allAlbums.sort(() => 0.5 - Math.random());
-    const featuredAlbums = shuffled.slice(0, limit);
-
-    res.json(featuredAlbums);
+    const albums = await Album.find().sort({ release_date: -1 }).limit(limit);
+    res.json(albums);
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Error fetching albums" });
+    console.error("Error fetching albums:", error);
+    res.status(500).json({ error: "Failed to fetch albums" });
   }
 });
 
-// Start Server
+// Get album by ID
+app.get("/api/albums/:id", async (req, res) => {
+  try {
+    const album = await Album.findOne({ spotifyId: req.params.id });
+    if (!album) return res.status(404).json({ error: "Album not found" });
+    res.json(album);
+  } catch (error) {
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+});
+
+// ---------------- Start Server ----------------
 const PORT = process.env.PORT || 5051;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

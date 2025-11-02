@@ -1,5 +1,5 @@
 import React from "react";
-import './styles.css';
+import '../styles.css';
 
 function ArtistDetail({ artist }) {
   if (!artist) return <div>Loading...</div>;
